@@ -1,4 +1,4 @@
-function all_boxes = selective_search(image_filenames)
+function all_boxes = selective_search_demo(image_filenames)
 
 addpath('Dependencies');
 
