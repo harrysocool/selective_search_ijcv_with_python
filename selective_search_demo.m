@@ -30,3 +30,4 @@ sigma = 0.8;
 im = imread(image_filenames);
 [boxes blobIndIm blobBoxes hierarchy] = Image2HierarchicalGrouping(im, sigma, k, minSize, colorType, simFunctionHandles);
 all_boxes = BoxRemoveDuplicates(boxes);
+all_boxes = all_boxes(:,[2,1,4,3]) - 1
