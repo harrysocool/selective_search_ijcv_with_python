@@ -32,10 +32,11 @@ all_boxes = {};
 for i=1:length(image_filenames)
     im = imread(image_filenames{i});
     [boxes blobIndIm blobBoxes hierarchy] = Image2HierarchicalGrouping(im, sigma, k, minSize, colorType, simFunctionHandles);
-    all_boxes{i} = BoxRemoveDuplicates(boxes);
+    correct_bbs = BoxRemoveDuplicates(boxes);
+    all_boxes{i} = correct_bbs;
+    display(['No.',int2str(i),' pictures processed, ', int2str(size(correct_bbs,1)), ' boxes']);
 end
 
 if nargin > 1
-    all_boxes
     save(output_filename, 'all_boxes', '-v7');
 end
