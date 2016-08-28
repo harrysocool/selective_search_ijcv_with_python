@@ -15,7 +15,7 @@ if(~exist('mexFelzenSegmentIndex'))
 end
 
 colorTypes = {'Hsv', 'Lab', 'RGI', 'H', 'Intensity'};
-colorType = colorTypes{1:2}; % Single color space for demo
+colorType = colorTypes(1:2); % Single color space for demo
 
 % Here you specify which similarity functions to use in merging
 simFunctionHandles = {@SSSimColourTextureSizeFillOrig, @SSSimTextureSizeFill, @SSSimBoxFillOrig, @SSSimSize};
@@ -30,10 +30,30 @@ sigma = 0.8;
 % Process all images.
 all_boxes = {};
 for i=1:length(image_filenames)
-    im = imread(image_filenames{i});
-    [boxes blobIndIm blobBoxes hierarchy] = Image2HierarchicalGrouping(im, sigma, k, minSize, colorType, simFunctionHandles);
-    boxes1 = BoxRemoveDuplicates(boxes);
-    correct_bbs = boxes1(:,[2,1,4,3]) - 1;
+    idx = 1;
+    for n = 1:length(colorTypes)
+        colorType = colorTypes{n};
+        [boxesT{idx} blobIndIm blobBoxes hierarchy priorityT{idx}] = ...
+          Image2HierarchicalGrouping(im, sigma, k, minSize, colorType, simFunctionHandles);
+        idx = idx + 1;
+    end
+    boxes = cat(1, boxesT{:}); % Concatenate boxes from all hierarchies
+    priority = cat(1, priorityT{:}); % Concatenate priorities
+
+    % Do pseudo random sorting as in paper
+    priority = priority .* rand(size(priority));
+    [priority sortIds] = sort(priority, 'ascend');
+    boxes = boxes(sortIds,:);
+    
+    boxes = FilterBoxesWidth(boxes, minBoxWidth);
+    boxes = BoxRemoveDuplicates(boxes);
+
+    % Adjust boxes to cancel effect of canonical scaling.
+    % boxes = (boxes - 1) * scale + 1;
+
+    boxes = FilterBoxesWidth(boxes, minBoxWidth);
+ 
+    correct_bbs = boxes(:,[2,1,4,3]) - 1;
     all_boxes{i} = correct_bbs;
     display(['No.',int2str(i),' pictures processed, ', int2str(size(correct_bbs,1)), ' boxes']);
 end
