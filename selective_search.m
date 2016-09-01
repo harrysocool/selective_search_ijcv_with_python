@@ -15,7 +15,7 @@ if(~exist('mexFelzenSegmentIndex'))
 end
 
 colorTypes = {'Hsv', 'Lab', 'RGI', 'H', 'Intensity'};
-colorType = colorTypes(1:2); % Single color space for demo
+colorTypes = colorTypes(1:2); % Single color space for demo
 
 % Here you specify which similarity functions to use in merging
 simFunctionHandles = {@SSSimColourTextureSizeFillOrig, @SSSimTextureSizeFill, @SSSimBoxFillOrig, @SSSimSize};
@@ -23,19 +23,24 @@ simFunctionHandles = simFunctionHandles(1:2); % Two different merging strategies
 
 % Thresholds for the Felzenszwalb and Huttenlocher segmentation algorithm.
 % Note that by default, we set minSize = k, and sigma = 0.8.
-k = 350; % controls size of segments of initial segmentation.
-minSize = k;
+ks = [300 350]; % controls size of segments of initial segmentation.
 sigma = 0.8;
+minBoxWidth = 20;
 
 % Process all images.
 all_boxes = {};
 for i=1:length(image_filenames)
+    im = imread(image_filenames{i});
     idx = 1;
-    for n = 1:length(colorTypes)
+    for j = 1:length(ks)
+      k = ks(j); % Segmentation threshold k
+      minSize = k; % We set minSize = k
+      for n = 1:length(colorTypes)
         colorType = colorTypes{n};
         [boxesT{idx} blobIndIm blobBoxes hierarchy priorityT{idx}] = ...
           Image2HierarchicalGrouping(im, sigma, k, minSize, colorType, simFunctionHandles);
         idx = idx + 1;
+      end
     end
     boxes = cat(1, boxesT{:}); % Concatenate boxes from all hierarchies
     priority = cat(1, priorityT{:}); % Concatenate priorities
